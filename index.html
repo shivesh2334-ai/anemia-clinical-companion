@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anemia Clinical Companion</title>
+<style>
+:root{--bg:#f8f4f7;--card:#fff;--ink:#2a1f2d;--mute:#6b5d70;--line:#e3d9e2;--red:#a3213f;--blue:#3a4a8c;--tint:#f3e6ec;--ok:#2d6a4f;--warn:#9a5b00;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b141d;--card:#271d2a;--ink:#f1e8f0;--mute:#b4a6b8;--line:#3d3041;--red:#e8607c;--blue:#8fa0f0;--tint:#37202b;--ok:#6fcf9a;--warn:#f0b35a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1b141d;--card:#271d2a;--ink:#f1e8f0;--mute:#b4a6b8;--line:#3d3041;--red:#e8607c;--blue:#8fa0f0;--tint:#37202b;--ok:#6fcf9a;--warn:#f0b35a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;line-height:1.25;margin:0 0 .4em}
+header{padding:18px 16px 8px;max-width:760px;margin:auto}
+h1{font-size:1.7rem;color:var(--red)}
+.sub{color:var(--mute);font-size:.88rem;margin:0}
+nav{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px 16px;max-width:760px;margin:auto;border-bottom:1px solid var(--line)}
+nav button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:999px;font:inherit;font-size:.9rem;cursor:pointer}
+nav button[aria-selected=true]{background:var(--red);border-color:var(--red);color:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+main{max-width:760px;margin:auto;padding:14px 16px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:.82rem;color:var(--mute)}
+input,select{width:100%;padding:9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+.chk{display:flex;gap:8px;align-items:center;font-size:.9rem;color:var(--ink);margin:4px 0}
+.chk input{width:auto}
+.btn{background:var(--red);color:#fff;border:0;border-radius:8px;padding:11px 18px;font:inherit;font-weight:600;cursor:pointer;margin-top:10px}
+.btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.res{border-left:4px solid var(--red);background:var(--tint)}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.8rem;background:var(--tint);color:var(--red);border:1px solid var(--line);margin:0 4px 4px 0}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--red)}
+details{border:1px solid var(--line);border-radius:10px;background:var(--card);margin-bottom:8px}
+summary{padding:12px 14px;cursor:pointer;font-weight:600;font-family:Georgia,serif}
+details>div{padding:0 14px 12px}
+ul{padding-left:20px;margin:.3em 0}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{border:1px solid var(--line);padding:5px 7px;text-align:left}
+th{background:var(--tint)}
+.scroll{overflow-x:auto}
+.opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,var(--bg))}
+.opt.wrong{border-color:var(--red);background:color-mix(in srgb,var(--red) 18%,var(--bg))}
+.note{font-size:.78rem;color:var(--mute)}
+</style></head><body>
+<header><h1>Anemia Clinical Companion</h1>
+<p class="sub">Based on Harrison’s Principles of Internal Medicine, Ch. 63, 97, 99 and 100. For education and clinical decision support; verify against local guidelines.</p></header>
+<nav role="tablist" id="nav"></nav>
+<main id="app"></main>
+<script>
+var TABS=[["assess","Assess"],["patho","Pathophysiology"],["tx","Treatment"],["learn","Learn"],["kb","Knowledge bank"]];
+var cur="assess",app=document.getElementById("app"),nav=document.getElementById("nav");
+function $(i){return document.getElementById(i)}
+function nv(i){var v=parseFloat($(i).value);return isNaN(v)?null:v}
+function renderNav(){nav.innerHTML=TABS.map(function(t){return '<button role="tab" aria-selected="'+(t[0]==cur)+'" data-t="'+t[0]+'">'+t[1]+'</button>'}).join("")}
+nav.onclick=function(e){var t=e.target.getAttribute("data-t");if(t){cur=t;show()}};
+function show(){renderNav();({assess:vAssess,patho:vPatho,tx:vTx,learn:vLearn,kb:vKb})[cur]();window.scrollTo(0,0)}
+
+/* ---------- ASSESS ---------- */
+function vAssess(){
+app.innerHTML='<div class="card"><h2>Patient data</h2><div class="grid">'+
+'<div><label>Sex</label><select id="sex"><option value="M">Male</option><option value="F">Female</option></select></div>'+
+'<div><label>Hemoglobin (g/dL)</label><input id="hb" type="number" step="0.1" inputmode="decimal"></div>'+
+'<div><label>Hematocrit (%)</label><input id="hct" type="number" step="0.1" inputmode="decimal"></div>'+
+'<div><label>MCV (fL)</label><input id="mcv" type="number" inputmode="decimal"></div>'+
+'<div><label>Reticulocytes (%)</label><input id="ret" type="number" step="0.1" inputmode="decimal"></div>'+
+'<div><label>Serum ferritin (µg/L)</label><input id="fer" type="number" inputmode="decimal"></div>'+
+'<div><label>Transferrin saturation (%)</label><input id="tsat" type="number" inputmode="decimal"></div>'+
+'<div><label>TIBC (µg/dL)</label><input id="tibc" type="number" inputmode="decimal"></div>'+
+'<div><label>Serum iron (µg/dL)</label><input id="si" type="number" inputmode="decimal"></div>'+
+'<div><label>Body weight (kg)</label><input id="wt" type="number" inputmode="decimal"></div></div>'+
+'<h3 style="margin-top:12px">Clinical and smear clues</h3>'+
+[["bleed","Blood loss or GI bleeding"],["preg","Pregnancy, growth spurt or menstruating"],["jaund","Jaundice, dark urine or splenomegaly"],["ldh","High LDH or low haptoglobin"],["inf","Chronic infection, inflammation or cancer"],["ckd","Chronic kidney disease"],["neuro","Paresthesias, ataxia or loss of vibration sense"],["vegan","Vegan diet, gastrectomy or PPI or metformin use"],["hyper","Hypersegmented neutrophils"],["target","Target cells on smear"],["spur","Spherocytes or fragments on smear"],["ring","Ring sideroblasts (marrow)"]].map(function(c){return '<label class="chk"><input type="checkbox" id="f_'+c[0]+'">'+c[1]+'</label>'}).join("")+
+'<button class="btn" id="go">Assess</button> <button class="btn alt" id="clr">Clear</button></div><div id="out"></div>';
+$("go").onclick=run;$("clr").onclick=vAssess}
+function run(){
+var sex=$("sex").value,hb=nv("hb"),hct=nv("hct"),mcv=nv("mcv"),ret=nv("ret"),fer=nv("fer"),ts=nv("tsat"),tibc=nv("tibc"),si=nv("si"),wt=nv("wt");
+var f=function(k){return $("f_"+k).checked};
+var o=$("out");
+if(hb==null){o.innerHTML='<div class="card res">Enter hemoglobin to start.</div>';return}
+var h="",L=[],dx=[];
+var cut=sex=="M"?13:12,an=hb<cut;
+var sev=hb>=11?"mild":hb>=8?"moderate":"severe";
+h+='<div class="card res"><h3>1. Is anemia present?</h3><p><b class="'+(an?"bad":"ok")+'">'+(an?"Anemia ("+sev+")":"No anemia by WHO criteria")+'</b> — Hb '+hb+' g/dL vs cut-off &lt;'+cut+' g/dL ('+(sex=="M"?"men":"women")+'; WHO).</p>';
+if(an&&hb<8)h+='<p class="bad">Hb &lt;8 g/dL: assess for hemodynamic instability and tissue hypoxia; consider transfusion if symptomatic or unstable.</p>';
+if(hb>=(sex=="M"?17:15))h+='<p class="warn">Hb at or above the polycythemia trigger ('+(sex=="M"?"17":"15")+' g/dL). See Treatment tab for evaluation.</p>';
+h+='</div>';
+if(!an){o.innerHTML=h;return}
+/* retic */
+var rpi=null,corr=null;
+if(ret!=null){var H=hct!=null?hct:hb*3;corr=ret*H/45;var mat=H>=40?1:H>=30?1.5:H>=20?2:2.5;rpi=corr/mat;
+h+='<div class="card"><h3>2. Marrow response</h3><p>Corrected retic = '+ret+' × '+H.toFixed(0)+'/45 = <b>'+corr.toFixed(1)+'%</b>. Reticulocyte production index = '+corr.toFixed(1)+' ÷ '+mat+' = <b>'+rpi.toFixed(1)+'</b>'+(hct==null?' <span class="note">(Hct estimated as 3 × Hb)</span>':'')+'.</p><p>'+
+(rpi>=2.5?'<b class="bad">RPI ≥2.5: hemolysis or hemorrhage</b> (appropriate marrow response).':'<b class="warn">RPI &lt;2: hypoproliferative or maturation disorder</b> (inadequate response).')+'</p></div>'}
+/* morphology */
+var mt=mcv==null?null:mcv<80?"micro":mcv>100?"macro":"normo";
+if(mt)h+='<div class="card"><h3>3. Morphology</h3><p>MCV '+mcv+' fL: <b>'+({micro:"microcytic (&lt;80)",macro:"macrocytic (&gt;100)",normo:"normocytic"})[mt]+'</b>.</p></div>';
+/* differential */
+var iron="";
+var lowFer=fer!=null&&fer<15,infFer=fer!=null&&fer>=30&&fer<=200;
+if(rpi!=null&&rpi>=2.5||(rpi==null&&(f("jaund")||f("ldh")||f("spur")))){
+ dx.push("<b>Hemolytic anemia</b> (intravascular or extravascular). Confirm with LDH, haptoglobin, indirect bilirubin, smear, direct antiglobulin test.");
+ if(f("spur"))dx.push("Spherocytes or fragments: hereditary spherocytosis, autoimmune hemolysis or mechanical or microangiopathic destruction (check DAT, valves, TTP and HUS).");
+ if(f("target"))dx.push("Target cells with hemolysis: consider hemoglobinopathy (sickle cell, thalassemia) and do hemoglobin electrophoresis.");
+ if(f("bleed"))dx.push("<b>Acute or subacute blood loss</b>: reticulocyte response appears after a delay of several days; look for the source.");
+ dx.push("If no clear hemolysis and no bleeding source, recheck in 2–3 weeks: a recovering state can mimic hemolysis.");
+}else{
+ if(mt=="micro"||lowFer||(ts!=null&&ts<20&&fer!=null)){
+  if(lowFer||(ts!=null&&ts<10&&(tibc==null||tibc>360)))dx.push("<b>Iron deficiency anemia</b>: ferritin &lt;15 µg/L is diagnostic of absent stores; typically low SI, high TIBC (&gt;360), saturation &lt;10%. In an adult male or postmenopausal woman, treat as GI blood loss until proven otherwise.");
+  else if(infFer||(tibc!=null&&tibc<300))dx.push("<b>Anemia of inflammation (chronic disease)</b>: ferritin normal or high (30–200+), TIBC low or normal (&lt;300), saturation 10–20%. Check for coexisting iron deficiency (sTfR may help).");
+  if(f("target")||(fer!=null&&fer>50&&ts!=null&&ts>30))dx.push("<b>Thalassemia trait</b> if microcytosis with normal or high iron indices, high saturation, target cells, normal RDW; confirm with hemoglobin electrophoresis.");
+  if(f("ring")||(fer!=null&&fer>=50&&ts!=null&&ts>=30))dx.push("<b>Sideroblastic anemia</b> (often myelodysplasia): normal or high iron, ring sideroblasts on marrow iron stain.");
+ }
+ if(mt=="macro"||f("hyper")){
+  dx.push("<b>Megaloblastic anemia</b> (B12 or folate deficiency) if oval macrocytes and hypersegmented neutrophils: check serum B12, folate, and MMA and homocysteine when borderline. Other causes: drugs (methotrexate, hydroxyurea), alcohol, myelodysplasia, liver disease, hypothyroidism.");
+  if(f("neuro")||f("vegan"))dx.push("<b>B12 deficiency</b> is likely if neurologic signs, vegan diet, gastrectomy, PPI or metformin use: test anti-intrinsic factor and parietal cell antibodies, gastrin, then consider gastric evaluation for pernicious anemia.");
+  if(f("neuro"))L.push("Neurologic involvement: do not treat with folate alone; B12 deficiency must be excluded first.");
+ }
+ if(f("ckd"))dx.push("<b>Anemia of CKD</b>: normocytic normochromic, low reticulocytes; low EPO relative to renal function. Check iron stores before EPO.");
+ if(f("inf")&&!dx.some(function(x){return x.indexOf("inflammation")>0}))dx.push("<b>Anemia of inflammation</b> is possible (infection, rheumatoid disease, cancer): ferritin is often the most helpful discriminating test.");
+ if(!dx.length)dx.push("Hypoproliferative anemia with normocytic indices: consider early iron deficiency, inflammation, renal disease, endocrine deficiency (thyroid, adrenal, pituitary), protein starvation, liver disease or marrow damage (aplasia, infiltration, fibrosis). Marrow examination is indicated if renal function and iron status are normal.");
+}
+h+='<div class="card res"><h3>4. Likely diagnoses</h3><ul>'+dx.map(function(d){return "<li>"+d+"</li>"}).join("")+'</ul></div>';
+/* iron deficit */
+if(wt!=null&&(lowFer||(ts!=null&&ts<10))){var d1=wt*2.3*(15-hb)+500,d2=wt*2.3*(15-hb)+1000;
+ h+='<div class="card"><h3>5. Iron replacement</h3><p>Oral: up to 200 mg elemental iron daily (3–4 tablets of 50–65 mg), empty stomach if tolerated. Expect reticulocytosis in 4–7 days, peak 1–1.5 weeks. Continue 6–12 months to rebuild stores of 0.5–1 g.</p><p>Parenteral total dose (Harrison formula): weight × 2.3 × (15 − Hb) + 500 mg for stores = <b>'+d1.toFixed(0)+' mg</b> (or +1000 mg = '+d2.toFixed(0)+' mg).</p></div>'}
+if(L.length)h+='<div class="card"><h3>Cautions</h3><ul class="bad">'+L.map(function(x){return "<li>"+x+"</li>"}).join("")+'</ul></div>';
+h+='<p class="note">Decision support only; it does not replace clinical judgment. Multiple causes often coexist.</p>';
+o.innerHTML=h;o.scrollIntoView({behavior:"smooth"})}
+
+/* ---------- PATHO ---------- */
+var PATHO=[
+["Red cell production and EPO","<ul><li>Red cell lifespan 100–120 days; 0.8–1% of cells are replaced daily.</li><li>EPO is made by peritubular capillary-lining cells in the kidney. The stimulus is tissue O<sub>2</sub> availability, sensed through HIF-1α (hydroxylated and degraded when O<sub>2</sub> is present).</li><li>EPO prevents apoptosis of committed erythroid progenitors; the half-clearance is 6–9 h. Marrow output can rise 4- to 5-fold in 1–2 weeks, only with adequate iron.</li><li>Anemia occurs from decreased red cell mass, abnormal O<sub>2</sub> loading, impaired renal blood flow, a failing kidney, or inadequate marrow or substrates.</li></ul>"],
+["Functional classification","<ul><li><b>Hypoproliferative</b> (≥75% of anemias): RPI &lt;2; marrow failure, iron deficiency, inflammation, renal disease, hypometabolism. Normocytic normochromic or mildly microcytic.</li><li><b>Maturation disorders</b>: RPI &lt;2 with macro- or microcytosis; ineffective erythropoiesis with marrow erythroid hyperplasia. Nuclear defects (B12, folate, drugs, myelodysplasia) and cytoplasmic defects (iron deficiency, thalassemia, sideroblastic).</li><li><b>Blood loss or hemolysis</b>: RPI ≥2.5; polychromatophilic macrocytes on smear.</li><li>Marrow M:E ratio: 2–3:1 hypoproliferative; ≤1:1 with hemolysis (erythroid hyperplasia).</li></ul>"],
+["Compensation to anemia","<ul><li>Right shift of the O<sub>2</sub>–Hb curve: Bohr effect and 2,3-BPG rise in chronic anemia (2–3 g/dL deficit compensated).</li><li>Increased cardiac output, regional flow redistribution away from kidney, gut and skin.</li><li>Acute loss: symptoms of instability at 10–15% volume loss; postural hypotension and tachycardia &gt;30%; shock &gt;40%. Hb and Hct do not reflect early loss.</li></ul>"],
+["Iron metabolism and stages of deficiency","<ul><li>Iron absorbed in duodenum and proximal jejunum via DMT-1; exported by ferroportin (regulated by hepcidin); carried on transferrin. ~80% is recycled from senescent red cells by macrophages.</li><li>Daily need: ~1 mg (men), 1.4 mg (women); up to 20 mg/day is recycled through red cell turnover.</li></ul><div class='scroll'><table><tr><th>Stage</th><th>Ferritin</th><th>TIBC</th><th>Sat %</th><th>Marrow Fe</th></tr><tr><td>Normal</td><td>50–200</td><td>300–360</td><td>30–50</td><td>1–3+</td></tr><tr><td>Negative balance</td><td>&lt;20</td><td>&gt;360</td><td>NL</td><td>0–1+</td></tr><tr><td>Iron-deficient erythropoiesis</td><td>&lt;15</td><td>&gt;380</td><td>&lt;20</td><td>0</td></tr><tr><td>Iron deficiency anemia</td><td>&lt;15</td><td>&gt;400</td><td>&lt;10</td><td>0</td></tr></table></div>"],
+["Anemia of inflammation","<ul><li>IL-1, TNF, IFN-β and IFN-γ suppress EPO production and the response of erythroid progenitors.</li><li>IL-6 raises liver hepcidin, which blocks ferroportin: iron is trapped in macrophages (low serum iron, normal or high ferritin) and red cell survival is mildly shortened.</li><li>Typically normocytic; can become microcytic with long-standing disease.</li></ul>"],
+["Megaloblastic anemia (B12 and folate)","<ul><li>Shared defect: impaired DNA synthesis from failure to convert dUMP to dTMP; RNA and hemoglobin synthesis continue, giving nuclear-cytoplasmic asynchrony and ineffective hematopoiesis (intramedullary death).</li><li>Folate trap: B12 deficiency traps folate as 5-methyl-THF; this explains why high-dose folate can correct the anemia but not the neurologic damage.</li><li>B12 absorption needs intrinsic factor from gastric parietal cells and ileal uptake via cubilin; body stores 2–3 mg last 3–4 years. Folate stores last only 3–4 months.</li><li>Peripheral blood: oval macrocytes, MCV usually &gt;100, hypersegmented neutrophils, raised LDH and unconjugated bilirubin.</li><li>Neurologic: demyelination of dorsal and lateral columns, peripheral neuropathy, cognitive change.</li></ul>"],
+["Hemolysis","<ul><li>Shortened red cell survival from intracorpuscular (membrane, enzyme, hemoglobin) or extracorpuscular (immune, mechanical, toxic, infectious) causes.</li><li>Intravascular: hemoglobinemia, hemoglobinuria, low haptoglobin, high LDH (up to 10×). Extravascular: splenic or hepatic macrophage clearance, unconjugated hyperbilirubinemia, splenomegaly.</li><li>Compensated hemolysis: marrow output matches destruction, so there is no anemia. Complications: pigment gallstones, aplastic crises with infection, iron overload if transfused, folate demand.</li></ul>"],
+["Polycythemia","<ul><li>Relative (low plasma volume) versus true erythrocytosis. Hct &gt;60% (men) or &gt;55% (women) is almost always a true increase in red cell mass.</li><li>Secondary causes: smoking, altitude, lung disease, sleep apnea, congenital heart disease, high O<sub>2</sub>-affinity hemoglobin, EPO-producing tumors. Polycythemia vera: low EPO, aquagenic pruritus, splenomegaly.</li><li>Symptoms come from hyperviscosity (rises steeply above Hct 55%) and thrombosis.</li></ul>"]];
+function vPatho(){app.innerHTML='<h2>Pathophysiology</h2>'+PATHO.map(function(p,i){return '<details'+(i==0?' open':'')+'><summary>'+p[0]+'</summary><div>'+p[1]+'</div></details>'}).join("")}
+
+/* ---------- TREATMENT ---------- */
+var TX=[
+["Principles","<ul><li>Start treatment of mild to moderate anemia only after a specific diagnosis is made.</li><li>Causes are often multifactorial (for example inflammation plus chronic GI blood loss in rheumatoid arthritis with NSAIDs).</li><li>Always evaluate iron status before and during treatment of any anemia.</li></ul>"],
+["Iron deficiency: oral iron","<ul><li>Up to 200 mg elemental iron daily, as 3–4 tablets of 50–65 mg (ferrous sulfate 325 mg tablet = 65 mg iron). Empty stomach; vitamin C may help absorption.</li><li>Absorption falls as Hb rises and EPO drive decreases. Goal: correct anemia and restore 0.5–1 g stores; continue 6–12 months.</li><li>GI side effects in 15–20%; lower doses or delayed-release forms may help.</li><li>Response: reticulocytosis starts in 4–7 days and peaks at 1–1.5 weeks. Failure: poor absorption, ongoing loss or wrong diagnosis. Iron tolerance test: serum iron should rise ≥100 µg/dL at 2–3 h after oral dose.</li></ul>"],
+["Iron deficiency: parenteral iron","<ul><li>For intolerance, malabsorption, ongoing loss, or high demand (EPO therapy, dialysis).</li><li>Total dose = weight (kg) × 2.3 × (15 − Hb g/dL) + 500 or 1000 mg for stores.</li><li>Newer preparations (ferumoxytol, ferric gluconate, sucrose, ferric carboxymaltose, ferric derisomaltose) have lower anaphylaxis rates than high-molecular-weight iron dextran. Stop the infusion if chest pain, wheeze or hypotension occurs.</li></ul>"],
+["Megaloblastic anemia","<ul><li>Identify cause before treating: serum B12, folate, MMA and homocysteine, intrinsic factor and parietal cell antibodies.</li><li>Pernicious anemia and gastrectomy need lifelong B12. After total gastrectomy, begin B12 prophylaxis immediately. A B12 trial of at least 3 months is used for neurologic or borderline cases.</li><li>Avoid giving folic acid alone when B12 deficiency is not excluded; it can correct the anemia while neurologic damage progresses.</li><li>Folic acid in pregnancy: 0.4 mg daily from conception reduces neural tube defects by ~70%.</li></ul>"],
+["Anemia of inflammation and CKD","<ul><li>Treat the underlying disease. Symptomatic anemia: transfusion or EPO.</li><li>CKD: EPO ~50–150 U/kg IV three times weekly; Hb 10–12 g/dL is usually reached in 4–6 weeks if iron is adequate; 90% respond. Lower the dose once target is reached; a fall in Hb on EPO suggests infection or iron depletion. Replace iron in dialysis patients.</li><li>Darbepoetin has a half-life 3–4× longer than EPO. Oral HIF stabilizers (roxadustat) are also used in CKD.</li><li>In cancer, EPO needs weighing against thrombotic risk and possible tumor progression.</li></ul>"],
+["Transfusion","<ul><li>Base thresholds on symptoms. Patients without cardiovascular or pulmonary disease generally tolerate Hb above 7–8 g/dL; those with physiologic compromise may need a higher threshold.</li><li>One unit of packed red cells raises Hb by about 1 g/dL.</li><li>Risks: infection, reactions, iron overload with chronic transfusion. Use a conservative approach when tissue hypoxia is absent.</li></ul>"],
+["Hemolytic anemia","<ul><li>Treatment depends on the cause (immune: steroids and other immunosuppression; hereditary spherocytosis: folate, consider splenectomy; mechanical: correct the source).</li><li>Supplement folate when hemolysis is chronic. Watch for iron loss in intravascular hemolysis and iron overload in extravascular hemolysis with transfusion.</li></ul>"],
+["Polycythemia","<ul><li>Evaluate if Hb ≥17 g/dL (men) or ≥15 g/dL (women), or Hct &gt;50% / &gt;45%. Measure serum EPO; red cell mass is a physiologic test but rarely done.</li><li>Look for smoking, altitude, sleep apnea, lung and heart disease, tumors; consider JAK2 testing if EPO is low.</li><li>Treat the cause; phlebotomy is used to control hyperviscosity in polycythemia vera.</li></ul>"]];
+function vTx(){app.innerHTML='<h2>Treatment</h2>'+TX.map(function(p,i){return '<details'+(i==0?' open':'')+'><summary>'+p[0]+'</summary><div>'+p[1]+'</div></details>'}).join("")+'<p class="note">Doses are summarized from the source chapters; confirm with current prescribing information.</p>'}
+
+/* ---------- LEARN ---------- */
+var Q=[
+["WHO defines anemia in adult women as Hb below:",["11 g/dL","12 g/dL","13 g/dL","10 g/dL"],1,"WHO: &lt;13 g/dL in men and &lt;12 g/dL in women."],
+["Corrected reticulocyte count 9%, Hb 7.5, Hct 23%. What is the reticulocyte production index (maturation factor 2)?",["2.25","4.5","9","1.1"],0,"Corrected = 9 × 23/45 = 4.5%; RPI = 4.5 ÷ 2 = 2.25, hence an inadequate response (&lt;2.5)."],
+["Which pattern fits iron deficiency anemia?",["High ferritin, low TIBC","Low ferritin, high TIBC, saturation &lt;10%","Normal ferritin, high saturation","Low ferritin, low TIBC"],1,"Low SI, high TIBC, low saturation and ferritin &lt;15 µg/L."],
+["Anemia of inflammation is mediated mainly by which iron regulator?",["Ferroportin mutation","Hepcidin","Transferrin receptor","Ferritin light chain"],1,"IL-6 raises hepcidin, blocking iron release from stores."],
+["Serum ferritin below which value indicates absent body iron stores?",["15 µg/L","50 µg/L","100 µg/L","200 µg/L"],0,"&lt;15 µg/L is diagnostic of absent stores."],
+["Hypersegmented neutrophils and oval macrocytes suggest:",["Thalassemia","Aplastic anemia","Megaloblastic anemia","Anemia of CKD"],2,"B12 or folate deficiency."],
+["Which is true of B12 versus folate stores?",["B12 stores last 3–4 months","Folate stores last 3–4 years","B12 stores last 3–4 years; folate 3–4 months","Both last about 1 year"],2,"B12 body stores 2–3 mg; folate stores ~10 mg."],
+["The ‘folate trap’ explains why:",["Folate cures B12 neuropathy","High-dose folate can correct the anemia of B12 deficiency","Iron corrects macrocytosis","EPO fails in CKD"],1,"B12 deficiency traps folate as 5-methyl-THF; the neurologic damage is not corrected."],
+["Which findings suggest intravascular hemolysis?",["Low LDH, high haptoglobin","Hemoglobinuria, high LDH, low haptoglobin","Low bilirubin, low retics","High ferritin only"],1,"Free hemoglobin binds haptoglobin; LDH can be up to 10× normal."],
+["Reticulocytes appear after starting oral iron within about:",["1 day","4–7 days","3 weeks","2 months"],1,"The peak is at 1–1.5 weeks."],
+["Thalassemia trait versus iron deficiency: which favors thalassemia?",["Low ferritin","High RDW","Normal or high iron and saturation, target cells","Low saturation"],2,"Iron values are normal or high, RDW is usually normal."],
+["Target Hb on EPO in CKD is usually:",["7–8 g/dL","10–12 g/dL","13–15 g/dL","&gt;16 g/dL"],1,"Hb 10–12 g/dL; reduce the dose when the target is reached."]];
+var qi=0,qs=0,qa=false;
+function vLearn(){qi=0;qs=0;qa=false;qView()}
+function qView(){
+if(qi>=Q.length){app.innerHTML='<div class="card res"><h2>Score: '+qs+' / '+Q.length+'</h2><p>'+(qs>=10?"Excellent command of the chapters.":qs>=7?"Good. Review the explanations you missed in the Knowledge bank.":"Revisit the Pathophysiology tab and try again.")+'</p><button class="btn" id="rs">Restart</button></div>';$("rs").onclick=vLearn;return}
+var q=Q[qi];
+app.innerHTML='<div class="card"><p class="note">Question '+(qi+1)+' of '+Q.length+' · Score '+qs+'</p><h3>'+q[0]+'</h3>'+q[1].map(function(o,i){return '<button class="opt" data-i="'+i+'">'+o+'</button>'}).join("")+'<div id="ex"></div></div>';
+app.onclick=function(e){var b=e.target.closest(".opt");if(!b||qa)return;qa=true;var i=+b.getAttribute("data-i");
+var bs=app.querySelectorAll(".opt");bs[q[2]].classList.add("right");if(i!=q[2])b.classList.add("wrong");else qs++;
+$("ex").innerHTML='<p>'+q[3]+'</p><button class="btn" id="nx">'+(qi==Q.length-1?"See score":"Next question")+'</button>';
+$("nx").onclick=function(){qi++;qa=false;qView()}}}
+
+/* ---------- KNOWLEDGE BANK ---------- */
+var KB=[
+["Normal Hb and Hct by age and sex","Birth 17/52; child 12/36; adolescent 13/40; adult man 16±2/47±6; menstruating woman 13±2/40±6; postmenopausal 14±2/42±6; pregnancy 12±2/37±6 (Hb g/dL / Hct %)."],
+["Red cell indices","MCV 90±8 fL; MCH 30±3 pg; MCHC 33±2%. MCV &lt;80 microcytosis, &gt;100 macrocytosis. RDW reflects anisocytosis. MCH is the least useful index."],
+["Reticulocyte production index","Corrected retic = retic% × (patient Hct/normal Hct). RPI = corrected retic ÷ maturation time (Hct 45: 1.0; 35: 1.5; 25: 2.0; 15: 2.5). RPI &gt;2.5 hemolysis or bleeding; &lt;2 hypoproliferative or maturation disorder."],
+["Expected marrow response","Hb 15: RPI 1 (retics 50,000/µL); Hb 11: RPI 2–2.5 (100–150,000/µL); Hb 8: RPI 3–4 (300–400,000/µL)."],
+["Iron studies, normal","Serum iron 50–150 µg/dL; TIBC 300–360 µg/dL; saturation 25–50%; ferritin males ~100 µg/L, females ~30 µg/L. Ferritin is an acute-phase reactant; &gt;200 µg/L means at least some iron in stores."],
+["Microcytic anemia differential","Iron deficiency: SI &lt;30, TIBC &gt;360, sat &lt;10, ferritin &lt;15. Inflammation: SI &lt;50, TIBC &lt;300, sat 10–20, ferritin 30–200. Thalassemia: SI normal–high, TIBC normal, sat 30–80, ferritin 50–300. Sideroblastic: iron normal–high, ferritin 50–300."],
+["Hypoproliferative anemia diagnosis","Iron deficiency: MCV 60–90, ferritin &lt;15. Inflammation: MCV 80–90, ferritin 30–200. Renal disease: normocytic, ferritin 115–150. Hypometabolic: normocytic, normal iron indices."],
+["Body iron distribution","Adult male 80 kg: Hb 2500 mg, myoglobin and enzymes 500, transferrin iron 3, stores 600–1000. Adult female 60 kg: Hb 1700, stores 0–300 mg."],
+["Causes of iron deficiency","Increased demand (infancy, adolescence, pregnancy, EPO therapy); increased loss (chronic bleeding, menses, blood donation, phlebotomy); decreased intake or absorption (diet, sprue, Crohn’s, bariatric surgery, inflammation). Signs: cheilosis, koilonychia."],
+["Peripheral smear clues","Target cells: thalassemia, liver disease. Howell-Jolly bodies: absent spleen. Teardrops and nucleated cells: myelofibrosis. Fragments: mechanical valves, microangiopathy, thermal injury. Burr cells (echinocytes): uremia. Spur cells (acanthocytes): liver disease. Polychromasia: premature reticulocyte release."],
+["Marrow M:E ratio","Normal ~2–3:1. Hypoproliferative: 2–3:1 or higher. Hemolysis with RPI &gt;3: ≤1:1. Maturation disorders: M:E ratio lower than expected for the RPI."],
+["Vitamin B12 facts","Daily requirement 1–3 µg; diet 5–30 µg; stores 2–3 mg. Absorption: intrinsic factor, ileum, cubilin. Vegans, pernicious anemia, gastrectomy, ileal disease, fish tapeworm, PPI and metformin use are causes. Pernicious anemia: anti-IF antibody (type I ~55%), parietal cell antibody (~90%), high gastrin, low pepsinogen I."],
+["Folate facts","Daily requirement ~100 µg; stores ~10 mg (3–4 months). Absorbed in proximal jejunum (PCFT). Sources: liver, yeast, spinach, nuts; destroyed by cooking. Antagonists: methotrexate, pyrimethamine, trimethoprim."],
+["Neurologic B12 deficiency","Paresthesias, loss of vibration and proprioception, positive Romberg and Lhermitte signs, spasticity, cognitive and psychiatric change. May occur without anemia."],
+["Hemolysis laboratory features","Increased retics, indirect bilirubin, LDH, AST; low or absent haptoglobin (intravascular); hemoglobinuria and hemosiderinuria. Compensated hemolysis may show no anemia."],
+["Classification of hemolytic anemias","Inherited intracorpuscular: hemoglobinopathies, enzymopathies (G6PD, pyruvate kinase), membrane defects. Acquired intracorpuscular: PNH. Extracorpuscular: familial HUS, mechanical, toxic, drugs, infections, autoimmune."],
+["Polycythemia thresholds","Evaluate if Hb ≥17 (men) or ≥15 g/dL (women). Hct &gt;50% men or &gt;45% women possibly abnormal; &gt;60% and &gt;55% almost invariably true erythrocytosis."],
+["Anemia in older adults","~11% of community-dwelling adults over 65. About one-third have no clear cause (no nutrient deficiency or renal disease); EPO levels are inappropriately low for the Hb. Associated with frailty, hospitalization and mortality."],
+["EPO regulation","Kidney peritubular cells; HIF-1α. Normal EPO 10–25 U/L; rises logarithmically as Hb falls below 10–12 g/dL. In CKD or chronic inflammation, levels are lower than expected for the degree of anemia."]];
+function vKb(){app.innerHTML='<h2>Knowledge bank</h2><input id="q" type="search" placeholder="Search (for example ferritin, B12, target cells)" aria-label="Search knowledge bank"><div id="kl" style="margin-top:10px"></div>';
+function r(){var t=$("q").value.toLowerCase();var m=KB.filter(function(k){return (k[0]+" "+k[1]).toLowerCase().indexOf(t)>-1});
+$("kl").innerHTML=m.length?m.map(function(k){return '<div class="card"><h3>'+k[0]+'</h3><p style="margin:0">'+k[1]+'</p></div>'}).join(""):'<div class="card">No match. Try a shorter term.</div>'}
+$("q").oninput=r;r()}
+show();
+</script></body></html>
